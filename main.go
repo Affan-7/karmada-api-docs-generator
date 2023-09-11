@@ -81,9 +81,19 @@ func main() {
 
 	_, err = file.WriteString(header + "\n")
 
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	_, err = file.WriteString("Packages:\n\n")
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	for _, tag := range sortedTags {
 
-		_, err = file.WriteString(tag + "\n")
+		_, err = file.WriteString("- " + tag + "\n")
 
 		if err != nil {
 			log.Fatal(err)
