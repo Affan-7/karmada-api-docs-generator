@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"sort"
 )
 
 func main() {
@@ -25,6 +26,7 @@ func main() {
 	type swagger struct {
 		Swagger string
 		Info    info
+		Paths   interface{}
 	}
 
 	swaggerFile, err := os.Open("swagger.json")
@@ -44,5 +46,33 @@ func main() {
 	var swaggerJson swagger
 	json.Unmarshal([]byte(byteResult), &swaggerJson)
 
-	fmt.Println(swaggerJson.Info.Version)
+	paths := swaggerJson.Paths.(map[string]interface{})
+
+	uniqueTags := map[string]struct{}{} // It's a set like data structure for go, used to store unique tags
+
+	for _, pathData := range paths {
+
+		pathDataMap := pathData.(map[string]interface{})
+		get := pathDataMap["get"]
+		getMap := get.(map[string]interface{})
+		tags := getMap["tags"]
+		tagsSlice := tags.([]interface{})
+		for _, tag := range tagsSlice {
+			uniqueTags[tag.(string)] = struct{}{}
+		}
+	}
+
+	// Convert the unique tags to a slice for sorting
+	sortedTags := make([]string, 0, len(uniqueTags))
+	for tag := range uniqueTags {
+		sortedTags = append(sortedTags, tag)
+	}
+
+	// Sort the tags alphabetically
+	sort.Strings(sortedTags)
+
+	// Print the sorted tags
+	for _, tag := range sortedTags {
+		fmt.Println(tag)
+	}
 }
