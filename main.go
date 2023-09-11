@@ -77,6 +77,10 @@ func main() {
 		log.Fatal(err)
 	}
 
+	header := "---\ntitle: Karmada API reference docs\n---\n"
+
+	_, err = file.WriteString(header + "\n")
+
 	for _, tag := range sortedTags {
 
 		_, err = file.WriteString(tag + "\n")
