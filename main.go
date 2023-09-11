@@ -93,7 +93,7 @@ func main() {
 
 	for _, tag := range sortedTags {
 
-		_, err = file.WriteString("- " + tag + "\n")
+		_, err = file.WriteString("- [" + tag + "](#" + tag + ")\n")
 
 		if err != nil {
 			log.Fatal(err)
