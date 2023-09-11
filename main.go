@@ -77,6 +77,15 @@ func main() {
 		log.Fatal(err)
 	}
 
+	for _, tag := range sortedTags {
+
+		_, err = file.WriteString(tag + "\n")
+
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
 	err = file.Close()
 
 	if err != nil {
