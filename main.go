@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"os"
@@ -71,8 +70,16 @@ func main() {
 	// Sort the tags alphabetically
 	sort.Strings(sortedTags)
 
-	// Print the sorted tags
-	for _, tag := range sortedTags {
-		fmt.Println(tag)
+	fileName := "index.md"
+	file, err := os.Create(fileName)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = file.Close()
+
+	if err != nil {
+		log.Println(err)
 	}
 }
