@@ -93,7 +93,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// Create index of packages
+	// Create index of packages with links
 	_, err = file.WriteString("Packages:\n\n")
 	if err != nil {
 		log.Fatal(err)
@@ -107,18 +107,14 @@ func main() {
 		}
 	}
 
-	// Add links to the index
 	for _, tag := range sortedTags {
-
-		_, err = file.WriteString("\n\n## " + tag)
+		_, err = file.WriteString("\n## " + tag + "\n\n")
 
 		if err != nil {
 			log.Fatal(err)
 		}
-	}
 
-	for _, tag := range sortedTags {
-		fmt.Println("\n" + tag + "\n")
+		fmt.Println("\n## " + tag + "\n")
 
 		sortedPathWithMethod := make([]map[string]string, 0)
 
@@ -140,7 +136,12 @@ func main() {
 
 		for _, myMap := range sortedPathWithMethod {
 			for path, method := range myMap {
-				fmt.Println(method, path)
+				_, err = file.WriteString(strings.ToUpper(method) + " " + path + "\n\n")
+
+				if err != nil {
+					log.Fatal(err)
+				}
+				fmt.Println(strings.ToUpper(method) + " " + path)
 			}
 		}
 
@@ -149,18 +150,39 @@ func main() {
 
 func sortData(data *[]map[string]string) {
 	// A custom sorting function
+
+	valuePriority := map[string]int{
+		"get":     1,
+		"put":     2,
+		"post":    3,
+		"delete":  4,
+		"options": 5,
+		"head":    6,
+		"patch":   7,
+	}
+
 	sort.Slice(*data, func(i, j int) bool {
 		keysI := make([]string, 0, len((*data)[i]))
 		keysJ := make([]string, 0, len((*data)[j]))
+		valuesI := make([]string, 0, len((*data)[i]))
+		valuesJ := make([]string, 0, len((*data)[j]))
 
 		// Extract keys from maps
-		for key := range (*data)[i] {
+		for key, value := range (*data)[i] {
 			keysI = append(keysI, key)
+			valuesI = append(valuesI, value)
 		}
-		for key := range (*data)[j] {
+		for key, value := range (*data)[j] {
 			keysJ = append(keysJ, key)
+			valuesJ = append(valuesJ, value)
 		}
 
-		return keysI[0] < keysJ[0]
+		if keysI[0] == keysJ[0] {
+			valuePriorityI := valuePriority[valuesI[0]]
+			valuePriorityJ := valuePriority[valuesJ[0]]
+			return valuePriorityI < valuePriorityJ
+		} else {
+			return keysI[0] < keysJ[0]
+		}
 	})
 }
