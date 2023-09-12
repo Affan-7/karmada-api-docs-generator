@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"sort"
+	"strings"
 )
 
 func main() {
@@ -93,16 +94,36 @@ func main() {
 
 	for _, tag := range sortedTags {
 
-		_, err = file.WriteString("- [" + tag + "](#" + tag + ")\n")
+		_, err = file.WriteString("- [" + tag + "](#" + strings.ToLower(tag) + ")\n")
 
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
 
-	err = file.Close()
+	for _, tag := range sortedTags {
 
-	if err != nil {
-		log.Println(err)
+		_, err = file.WriteString("\n\n## " + tag)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+		for path, pathData := range paths {
+
+			pathDataMap := pathData.(map[string]interface{})
+			get := pathDataMap["get"]
+			getMap := get.(map[string]interface{})
+			tags := getMap["tags"]
+			tagsSlice := tags.([]interface{})
+
+			if tag == tagsSlice[0] {
+				_, err = file.WriteString("\n\n" + path)
+
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
+
+		}
 	}
 }
