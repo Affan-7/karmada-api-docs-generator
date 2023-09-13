@@ -2,12 +2,12 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"os"
 	"sort"
 	"strings"
+	"unicode"
 )
 
 func main() {
@@ -114,8 +114,6 @@ func main() {
 			log.Fatal(err)
 		}
 
-		fmt.Println("\n## " + tag + "\n")
-
 		sortedPathWithMethod := make([]map[string]string, 0)
 
 		for path, pathData := range paths {
@@ -136,12 +134,28 @@ func main() {
 
 		for _, myMap := range sortedPathWithMethod {
 			for path, method := range myMap {
-				_, err = file.WriteString(strings.ToUpper(method) + " " + path + "\n\n")
 
+				_, err = file.WriteString("#### " + strings.ToUpper(method) + " " + path + "\n\n")
 				if err != nil {
 					log.Fatal(err)
 				}
-				fmt.Println(strings.ToUpper(method) + " " + path)
+
+				pathData := paths[path]
+				pathDataMap := pathData.(map[string]interface{})
+				methodData := pathDataMap[method]
+				methodDataMap := methodData.(map[string]interface{})
+				description := methodDataMap["description"]
+				descriptionStr, ok := description.(string)
+				if !ok {
+					log.Fatal(`Can't do type assertion for methodDataMap["description"]`)
+				}
+
+				capitalizeFirstLetter(&descriptionStr)
+
+				_, err = file.WriteString(descriptionStr + "\n\n")
+				if err != nil {
+					log.Fatal(err)
+				}
 			}
 		}
 
@@ -185,4 +199,15 @@ func sortData(data *[]map[string]string) {
 			return keysI[0] < keysJ[0]
 		}
 	})
+}
+
+func capitalizeFirstLetter(s *string) {
+	if s == nil || len(*s) == 0 {
+		return
+	}
+
+	runeSlice := []rune(*s)
+	runeSlice[0] = unicode.ToUpper(runeSlice[0])
+
+	*s = string(runeSlice)
 }
