@@ -46,7 +46,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// Load the json into structs
+	// Load the json into swaggerJson struct
 	var swaggerJson swagger
 	json.Unmarshal([]byte(byteResult), &swaggerJson)
 
@@ -136,6 +136,7 @@ func main() {
 			for path, method := range myMap {
 
 				_, err = file.WriteString("#### " + strings.ToUpper(method) + " " + path + "\n\n")
+
 				if err != nil {
 					log.Fatal(err)
 				}
@@ -153,12 +154,42 @@ func main() {
 				capitalizeFirstLetter(&descriptionStr)
 
 				_, err = file.WriteString(descriptionStr + "\n\n")
+
 				if err != nil {
 					log.Fatal(err)
 				}
+
+				if pathDataMap["parameters"] != nil {
+					_, err = file.WriteString("| Parameter | Description |\n")
+
+					if err != nil {
+						log.Fatal(err)
+					}
+
+					_, err = file.WriteString("|---|---|\n")
+
+					if err != nil {
+						log.Fatal(err)
+					}
+
+					writeTableToFile(file, pathDataMap)
+				} else if methodDataMap["parameters"] != nil {
+					_, err = file.WriteString("| Parameter | Description |\n")
+
+					if err != nil {
+						log.Fatal(err)
+					}
+
+					_, err = file.WriteString("|:---|:---|\n")
+
+					if err != nil {
+						log.Fatal(err)
+					}
+
+					writeTableToFile(file, methodDataMap)
+				}
 			}
 		}
-
 	}
 }
 
@@ -210,4 +241,61 @@ func capitalizeFirstLetter(s *string) {
 	runeSlice[0] = unicode.ToUpper(runeSlice[0])
 
 	*s = string(runeSlice)
+}
+
+func replaceNewlinesWithBR(s *string) {
+	// Replace all occurrences of "\n" with "<br></br>"
+	*s = strings.ReplaceAll(*s, "\n", "<br></br>")
+}
+
+func writeTableToFile(file *os.File, data map[string]interface{}) {
+	var err error
+
+	if data["parameters"] != nil {
+
+		parametersData := data["parameters"]
+		parametersSlice := parametersData.([]interface{})
+		for _, parameter := range parametersSlice {
+			parameterMap := parameter.(map[string]interface{})
+
+			parameterName, ok := parameterMap["name"].(string)
+			if !ok {
+				log.Fatal(`Can't do type assertion for parameterMap["name"]`)
+			}
+
+			parameterType, ok := parameterMap["type"].(string)
+			if !ok {
+				log.Fatal(`Can't do type assertion for parameterType`)
+			}
+
+			parameterIn, ok := parameterMap["in"].(string)
+			if !ok {
+				log.Fatal(`Can't do type assertion for parameterType`)
+			}
+
+			if parameterName != "body" {
+				if parameterMap["description"] != nil {
+					parameterDescription, ok := parameterMap["description"].(string)
+					if !ok {
+						log.Fatal(`Can't do type assertion for parameterMap["description"]`)
+					}
+
+					replaceNewlinesWithBR(&parameterDescription)
+
+					_, err = file.WriteString("|**" + parameterName + "**<br></br>" + parameterType + "<br></br>*(" + parameterIn + ")*|" + parameterDescription + "|\n")
+
+					if err != nil {
+						log.Fatal(err)
+					}
+				} else {
+					parameterDescription := ""
+					_, err = file.WriteString("|**" + parameterName + "**<br></br>" + parameterType + "<br></br>*(" + parameterIn + ")*|" + parameterDescription + "|\n")
+
+					if err != nil {
+						log.Fatal(err)
+					}
+				}
+			}
+		}
+	}
 }
